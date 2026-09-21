@@ -3,6 +3,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvFileSource;
 class CalculatorTest {
     private final Calculator calculator = new Calculator();
     @Test
@@ -40,5 +42,17 @@ class CalculatorTest {
                 () -> calculator.divide(a, b)
         );
         assertEquals("Cannot divide by zero", ex.getMessage());
+    }
+
+    @ParameterizedTest(name = "Test {index} => {0} * {1} = {2}")
+    @CsvFileSource(resources = "/data.csv", numLinesToSkip = 1)
+    @DisplayName("multiply: kiểm thử với nhiều bộ dữ liệu từ CSV")
+    void multiply_VariousInputs_ReturnsProduct(int a, int b, int expected) {
+        // Arrange: a, b, expected do JUnit inject từ CSV
+        // Act
+        int actual = calculator.multiply(a, b);
+        // Assert
+        assertEquals(expected, actual,
+                () -> a + " * " + b + " phải bằng " + expected);
     }
 }
