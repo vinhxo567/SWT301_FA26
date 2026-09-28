@@ -1,0 +1,196 @@
+package fe.DE201004;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import java.time.LocalDate;
+import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class AccountValidatorTest {
+
+    // ---------- Username (BR-REG-02) ----------
+    @Nested
+    @DisplayName("isValidUsername")
+    class Username {
+
+        @ParameterizedTest
+        @ValueSource(strings = {"alice", "Alice_01", "Z____"})
+        void isValidUsername_Valid_ReturnsTrue(String username) {
+            assertTrue(AccountValidator.isValidUsername(username));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"ab_1", "1alice", "_alice", "ali ce", "alice!", "alice-01"})
+        void isValidUsername_Invalid_ReturnsFalse(String username) {
+            assertFalse(AccountValidator.isValidUsername(username));
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        @ValueSource(strings = {" "})
+        void isValidUsername_NullEmptyBlank_ReturnsFalse(String username) {
+            assertFalse(AccountValidator.isValidUsername(username));
+        }
+
+        @ParameterizedTest(name = "[{index}] độ dài {0} -> {1}")
+        @MethodSource("fe.DE201004.AccountValidatorTest#usernameLengths")
+        void isValidUsername_BoundaryLength(int length, boolean expected) {
+            assertEquals(expected, AccountValidator.isValidUsername("a".repeat(length)));
+        }
+    }
+
+    // ---------- Email (BR-REG-04) ----------
+    @Nested
+    @DisplayName("isValidEmail")
+    class Email {
+        
+        @ParameterizedTest(name = "[{index}] {0} -> {1}")
+        @CsvSource({
+            "alice@domain.com, true",
+            "alice.bob@sub.domain.co, true",
+            "alice+test@domain.com, true",
+            "alice@domain, false",
+            "@domain.com, false",
+            "alice@.com, false",
+            "alice@domain.c, false",
+            "alice@domain..com, false",
+            "'alice domain@com', false"
+        })
+        void isValidEmail_Partitions(String email, boolean expected) {
+            assertEquals(expected, AccountValidator.isValidEmail(email));
+        }
+
+        @ParameterizedTest(name = "[{index}] độ dài {0} -> {1}")
+        @MethodSource("fe.DE201004.AccountValidatorTest#emailLengths")
+        void isValidEmail_BoundaryLength(int length, boolean expected) {
+            // Local part: length - 12 ("@example.com" is 12 chars)
+            String email = "a".repeat(length - 12) + "@example.com";
+            assertEquals(expected, AccountValidator.isValidEmail(email));
+        }
+        
+        @ParameterizedTest
+        @NullAndEmptySource
+        @ValueSource(strings = {" "})
+        void isValidEmail_NullEmptyBlank_ReturnsFalse(String email) {
+            assertFalse(AccountValidator.isValidEmail(email));
+        }
+    }
+
+    // ---------- Password (BR-REG-06) ----------
+    @Nested
+    @DisplayName("isValidPassword")
+    class Password {
+
+        @ParameterizedTest(name = "[{index}] {3}")
+        @CsvSource(delimiter = '|', value = {
+                "Secret@123    | alice_01 | true  | hợp lệ",
+                "secret@123    | alice_01 | false | thiếu chữ hoa",
+                "SECRET@123    | alice_01 | false | thiếu chữ thường",
+                "Secret@abc    | alice_01 | false | thiếu số",
+                "Secret1234    | alice_01 | false | thiếu ký tự đặc biệt",
+                "'Secret @123' | alice_01 | false | chứa khoảng trắng",
+                "Xalice_01@1   | alice_01 | false | chứa username",
+                "Xalice_01@1   |          | true  | username null -> bỏ qua"
+        })
+        void isValidPassword_Partitions(String pw, String user, boolean expected, String desc) {
+            assertEquals(expected, AccountValidator.isValidPassword(pw, user));
+        }
+        
+        @ParameterizedTest(name = "[{index}] độ dài {0} -> {1}")
+        @MethodSource("fe.DE201004.AccountValidatorTest#passwordLengths")
+        void isValidPassword_BoundaryLength(int length, boolean expected) {
+            // base valid password: "Aa1@" (4 chars). Need to repeat 'a' to fill length
+            String pw = "Aa1@" + "a".repeat(Math.max(0, length - 4));
+            if (length < 4) pw = "Aa1@".substring(0, length);
+            assertEquals(expected, AccountValidator.isValidPassword(pw, "bob"));
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        @ValueSource(strings = {" "})
+        void isValidPassword_NullEmptyBlank_ReturnsFalse(String password) {
+            assertFalse(AccountValidator.isValidPassword(password, "alice_01"));
+        }
+    }
+
+    // ---------- Phone (BR-REG-09) ----------
+    @Nested
+    @DisplayName("isValidPhone")
+    class Phone {
+
+        @ParameterizedTest
+        @ValueSource(strings = {"0312345678", "0512345678", "0712345678", "0812345678", "0912345678"})
+        void isValidPhone_ValidPrefixes_ReturnsTrue(String phone) {
+            assertTrue(AccountValidator.isValidPhone(phone));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"0112345678", "0412345678", "0612345678", "091234567", "09123456789",
+                "091234567a", "+84912345678", "9123456789", " 0912345678"})
+        void isValidPhone_InvalidValues_ReturnsFalse(String phone) {
+            assertFalse(AccountValidator.isValidPhone(phone));
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void isValidPhone_NullOrEmpty_ReturnsFalse(String phone) {
+            // validator chỉ kiểm định dạng; tính "tùy chọn" do AccountService xử lý
+            assertFalse(AccountValidator.isValidPhone(phone));
+        }
+    }
+
+    // ---------- Age (BR-REG-08) ----------
+    @ParameterizedTest(name = "[{index}] sinh {0}, hôm nay {1} -> {2} tuổi")
+    @CsvSource({
+            "2008-09-28, 2026-09-28, 18",   // đúng sinh nhật 18
+            "2008-09-29, 2026-09-28, 17",   // 18 tuổi trừ 1 ngày
+            "2008-09-27, 2026-09-28, 18",
+            "2008-02-29, 2026-02-28, 17",   // năm nhuận
+            "2008-02-29, 2026-03-01, 18",
+            "2026-09-28, 2026-09-28, 0"
+    })
+    void calculateAge_Boundaries(LocalDate dob, LocalDate today, int expected) {
+        assertEquals(expected, AccountValidator.calculateAge(dob, today));
+    }
+    
+    static Stream<Arguments> usernameLengths() {
+        return Stream.of(
+            Arguments.of(4, false), 
+            Arguments.of(5, true), 
+            Arguments.of(6, true), 
+            Arguments.of(19, true), 
+            Arguments.of(20, true),
+            Arguments.of(21, false)
+        );
+    }
+    
+    static Stream<Arguments> emailLengths() {
+        return Stream.of(
+            Arguments.of(99, true), 
+            Arguments.of(100, true), 
+            Arguments.of(101, false)
+        );
+    }
+    
+    static Stream<Arguments> passwordLengths() {
+        return Stream.of(
+            Arguments.of(7, false), 
+            Arguments.of(8, true), 
+            Arguments.of(9, true), 
+            Arguments.of(31, true), 
+            Arguments.of(32, true),
+            Arguments.of(33, false)
+        );
+    }
+}
