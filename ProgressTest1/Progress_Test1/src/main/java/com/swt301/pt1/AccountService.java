@@ -1,4 +1,4 @@
-package com.hfs302.pt1;
+package com.swt301.pt1;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -64,6 +64,29 @@ public class AccountService {
         return ResultCode.SUCCESS;
     }
 
+    public ResultCode login(String username, String password) {
+        if (isBlank(username) || isBlank(password)) return ResultCode.INVALID_INPUT;
+        
+        Account acc = accounts.get(key(username));
+        if (acc == null) return ResultCode.INVALID_CREDENTIALS;
+        
+        if (acc.getStatus() == AccountStatus.DISABLED) return ResultCode.ACCOUNT_DISABLED;
+        
+        if (acc.isLocked()) return ResultCode.ACCOUNT_LOCKED;
+        
+        if (!PasswordHasher.matches(acc.getSalt(), password, acc.getCurrentPasswordHash())) {
+            acc.incrementFailedAttempts();
+            if (acc.getFailedAttempts() >= MAX_FAILED_ATTEMPTS) {
+                acc.lock();
+                return ResultCode.ACCOUNT_LOCKED;
+            }
+            return ResultCode.INVALID_CREDENTIALS;
+        }
+        
+        acc.resetFailedAttempts();
+        return ResultCode.SUCCESS;
+    }
+
     public ResultCode unlockAccount(String username) { throw new UnsupportedOperationException("TODO"); }
 
     public Optional<Account> findByUsername(String username) {
@@ -71,7 +94,7 @@ public class AccountService {
         return Optional.ofNullable(accounts.get(key(username)));
     }
 
-    // ... login, changePassword, requestPasswordReset, resetPassword,
+    // ... changePassword, requestPasswordReset, resetPassword,
     //     disableAccount, isLocked như mục 5.3
 
     private static boolean isBlank(String s) { return s == null || s.isBlank(); }

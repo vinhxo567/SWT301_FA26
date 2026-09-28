@@ -1,9 +1,9 @@
 package fe.DE201004;
 
-import com.hfs302.pt1.Account;
-import com.hfs302.pt1.AccountService;
-import com.hfs302.pt1.AccountStatus;
-import com.hfs302.pt1.ResultCode;
+import com.swt301.pt1.Account;
+import com.swt301.pt1.AccountService;
+import com.swt301.pt1.AccountStatus;
+import com.swt301.pt1.ResultCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

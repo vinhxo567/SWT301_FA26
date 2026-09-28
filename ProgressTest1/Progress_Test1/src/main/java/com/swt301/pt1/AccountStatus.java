@@ -1,4 +1,4 @@
-package com.hfs302.pt1;
+package com.swt301.pt1;
 
 public enum AccountStatus {
     ACTIVE,

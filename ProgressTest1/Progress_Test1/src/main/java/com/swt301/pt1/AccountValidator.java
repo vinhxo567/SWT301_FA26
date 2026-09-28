@@ -1,4 +1,4 @@
-package com.hfs302.pt1;
+package com.swt301.pt1;
 
 import java.time.LocalDate;
 import java.time.Period;
