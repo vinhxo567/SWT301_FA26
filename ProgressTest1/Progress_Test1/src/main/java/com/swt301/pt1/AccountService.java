@@ -87,15 +87,34 @@ public class AccountService {
         return ResultCode.SUCCESS;
     }
 
-    public ResultCode unlockAccount(String username) { throw new UnsupportedOperationException("TODO"); }
+    public ResultCode unlockAccount(String username) {
+        Optional<Account> accOpt = findByUsername(username);
+        if (accOpt.isEmpty()) return ResultCode.USER_NOT_FOUND;
+        
+        accOpt.get().unlock();
+        return ResultCode.SUCCESS;
+    }
+
+    public ResultCode disableAccount(String username) {
+        Optional<Account> accOpt = findByUsername(username);
+        if (accOpt.isEmpty()) return ResultCode.USER_NOT_FOUND;
+        
+        accOpt.get().setStatus(AccountStatus.DISABLED);
+        return ResultCode.SUCCESS;
+    }
+
+    public boolean isLocked(String username) {
+        if (isBlank(username)) return false;
+        Account acc = accounts.get(key(username));
+        return acc != null && acc.isLocked();
+    }
 
     public Optional<Account> findByUsername(String username) {
         if (isBlank(username)) return Optional.empty();
         return Optional.ofNullable(accounts.get(key(username)));
     }
 
-    // ... changePassword, requestPasswordReset, resetPassword,
-    //     disableAccount, isLocked như mục 5.3
+    // ... changePassword, requestPasswordReset, resetPassword như mục 5.3
 
     private static boolean isBlank(String s) { return s == null || s.isBlank(); }
     private static String key(String s) { return s.toLowerCase(Locale.ROOT); }
