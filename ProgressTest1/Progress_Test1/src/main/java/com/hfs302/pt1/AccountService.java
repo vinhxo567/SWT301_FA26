@@ -1,4 +1,4 @@
-package fe.DE201004;
+package com.hfs302.pt1;
 
 public class AccountService {
     public static final int MAX_FAILED_ATTEMPTS = 5;

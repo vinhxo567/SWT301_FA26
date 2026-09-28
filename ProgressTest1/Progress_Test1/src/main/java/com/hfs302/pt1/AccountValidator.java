@@ -1,4 +1,4 @@
-package fe.DE201004;
+package com.hfs302.pt1;
 
 import java.time.LocalDate;
 import java.time.Period;
