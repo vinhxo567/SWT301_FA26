@@ -15,6 +15,7 @@ public class LoginPage extends BasePage {
     private final By loginButton   = By.cssSelector("button[type='submit']");
     private final By successMsg    = By.cssSelector(".flash.success");
     private final By errorMsg      = By.cssSelector(".flash.error");
+    private final By flashMessage  = By.id("flash");
 
     // ===== Actions =====
     public void navigate() {
@@ -25,6 +26,20 @@ public class LoginPage extends BasePage {
         type(usernameField, username);
         type(passwordField, password);
         click(loginButton);
+    }
+
+    /** Đăng nhập với tài khoản hợp lệ, trả về trang Secure Area (Fluent Page Object) */
+    public SecureAreaPage loginAs(String username, String password) {
+        login(username, password);
+        return new SecureAreaPage(driver);
+    }
+
+    public String getFlashMessage() {
+        return getText(flashMessage);
+    }
+
+    public boolean isAt() {
+        return driver.getCurrentUrl().endsWith("/login");
     }
 
     public By getSuccessLocator() { return successMsg; }
