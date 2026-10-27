@@ -3,11 +3,10 @@ package pages;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 
-public class LoginPage {
-    private final WebDriver driver;
+public class LoginPage extends BasePage {
 
     public LoginPage(WebDriver driver) {
-        this.driver = driver;
+        super(driver);
     }
 
     // ===== Locators (private – test không được biết) =====
@@ -19,15 +18,19 @@ public class LoginPage {
 
     // ===== Actions =====
     public void navigate() {
-        driver.get("https://the-internet.herokuapp.com/login");
+        navigateTo("https://the-internet.herokuapp.com/login");
     }
 
     public void login(String username, String password) {
-        driver.findElement(usernameField).sendKeys(username);
-        driver.findElement(passwordField).sendKeys(password);
-        driver.findElement(loginButton).click();
+        type(usernameField, username);
+        type(passwordField, password);
+        click(loginButton);
     }
 
     public By getSuccessLocator() { return successMsg; }
     public By getErrorLocator()   { return errorMsg; }
+
+    public String getMessageText(By locator) {
+        return getText(locator);
+    }
 }
