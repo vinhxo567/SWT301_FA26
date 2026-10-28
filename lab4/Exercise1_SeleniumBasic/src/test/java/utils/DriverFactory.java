@@ -4,20 +4,54 @@ import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.edge.EdgeOptions;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class DriverFactory {
+
     public static WebDriver createDriver() {
-        WebDriverManager.chromedriver().setup();
+        String browser   = ConfigReader.get("browser", "chrome").toLowerCase();
+        boolean headless = ConfigReader.getBool("headless", false);
+        boolean jsOn     = ConfigReader.getBool("javascriptEnabled", true);
 
-        ChromeOptions options = new ChromeOptions();
-        Map<String, Object> prefs = new HashMap<>();
-        prefs.put("profile.managed_default_content_settings.javascript", 2);
-        options.setExperimentalOption("prefs", prefs);
-        options.addArguments("--incognito");
-
-        return new ChromeDriver(options);
+        switch (browser) {
+            case "firefox": {
+                try {
+                    WebDriverManager.firefoxdriver().setup();
+                } catch (Exception ignored) {}
+                FirefoxOptions o = new FirefoxOptions();
+                if (headless) o.addArguments("-headless");
+                if (!jsOn) o.addPreference("javascript.enabled", false);
+                return new FirefoxDriver(o);
+            }
+            case "edge": {
+                try {
+                    WebDriverManager.edgedriver().setup();
+                } catch (Exception ignored) {}
+                EdgeOptions o = new EdgeOptions();
+                if (headless) o.addArguments("--headless=new", "--window-size=1920,1080");
+                return new EdgeDriver(o);
+            }
+            case "chrome":
+            default: {
+                try {
+                    WebDriverManager.chromedriver().setup();
+                } catch (Exception ignored) {}
+                ChromeOptions o = new ChromeOptions();
+                o.addArguments("--incognito");
+                if (headless) o.addArguments("--headless=new", "--window-size=1920,1080");
+                if (!jsOn) {
+                    Map<String, Object> prefs = new HashMap<>();
+                    prefs.put("profile.managed_default_content_settings.javascript", 2);
+                    o.setExperimentalOption("prefs", prefs);
+                }
+                return new ChromeDriver(o);
+            }
+        }
     }
 }
